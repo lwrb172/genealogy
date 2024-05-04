@@ -43,9 +43,33 @@ public class Person {
         String line;
         reader.readLine();
         while ((line = reader.readLine()) != null) {
-            people.add(Person.fromCsvLine(line));
+            Person person = Person.fromCsvLine(line);
+            try {
+                person.validateLifespan();
+                people.add(Person.fromCsvLine(line));
+            } catch (NegativeLifespanException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
         }
         reader.close();
         return people;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public LocalDate getDeathDate() {
+        return deathDate;
+    }
+
+    private void validateLifespan() throws NegativeLifespanException {
+        if (deathDate != null && deathDate.isBefore(birthDate))
+            throw new NegativeLifespanException(this);
     }
 }
