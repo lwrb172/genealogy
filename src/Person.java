@@ -46,8 +46,9 @@ public class Person {
             Person person = Person.fromCsvLine(line);
             try {
                 person.validateLifespan();
+                person.validateAmbiguity(people);
                 people.add(Person.fromCsvLine(line));
-            } catch (NegativeLifespanException e) {
+            } catch (NegativeLifespanException | AmbiguousPersonException e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
@@ -71,5 +72,12 @@ public class Person {
     private void validateLifespan() throws NegativeLifespanException {
         if (deathDate != null && deathDate.isBefore(birthDate))
             throw new NegativeLifespanException(this);
+    }
+
+    private void validateAmbiguity(List<Person> people) throws AmbiguousPersonException {
+        for (Person person : people) {
+            if (person.getName().equals(getName()))
+                throw new AmbiguousPersonException(person);
+        }
     }
 }
