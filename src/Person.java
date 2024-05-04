@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Person {
     private final String name;
     private final LocalDate birthDate;
     private final LocalDate deathDate;
+    private List<Person> parents = new ArrayList<>();
 
     public Person(String name, LocalDate birthDate, LocalDate deathDate) {
         this.name = name;
@@ -34,25 +37,32 @@ public class Person {
                 "name='" + name + '\'' +
                 ", birthDate=" + birthDate +
                 ", deathDate=" + deathDate +
+                ", parents=" + parents +
                 '}';
     }
 
     public static List<Person> fromCsv(String path) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(path));
         List<Person> people = new ArrayList<>();
+        Map<String, PersonWithParentsNames> peopleWithParentNames = new HashMap<>();
         String line;
         reader.readLine();
         while ((line = reader.readLine()) != null) {
-            Person person = Person.fromCsvLine(line);
+//            Person person = Person.fromCsvLine(line);
+            var personWithParentNames = PersonWithParentsNames.fromCsvLine(line);
+            var person = personWithParentNames.getPerson();
             try {
                 person.validateLifespan();
                 person.validateAmbiguity(people);
                 people.add(Person.fromCsvLine(line));
+                people.add(person);
+                peopleWithParentNames.put(person.name, personWithParentNames);
             } catch (NegativeLifespanException | AmbiguousPersonException e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
         }
+        PersonWithParentsNames.linkRelatives(peopleWithParentNames);
         reader.close();
         return people;
     }
@@ -79,5 +89,9 @@ public class Person {
             if (person.getName().equals(getName()))
                 throw new AmbiguousPersonException(person);
         }
+    }
+
+    public void addParent(Person parent) {
+        parents.add(parent);
     }
 }
