@@ -1,4 +1,4 @@
-public class NegativeLifespanException extends Exception{
+public class NegativeLifespanException extends Exception {
     public NegativeLifespanException(Person person) {
         super("Person " + person.getName() +
                 " born in " +

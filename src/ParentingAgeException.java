@@ -1,0 +1,13 @@
+public class ParentingAgeException extends Exception{
+    public final Person person;
+    private static String personAndLifespan(Person person) {
+        return String.format("%s (%S%S)", person.getName(), person.getBirthDate(),
+                person.getDeathDate() == null ? "" : " - "+"\u2020" + person.getDeathDate());
+    }
+
+    public ParentingAgeException(Person person, Person parent) {
+        super(String.format("It is hard to imagine that %s could be parent to %s.",
+                personAndLifespan(parent), personAndLifespan(person)));
+        this.person = person;
+   }
+}

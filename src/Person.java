@@ -1,18 +1,18 @@
+import org.w3c.dom.ls.LSInput;
+
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Person {
     private final String name;
     private final LocalDate birthDate;
     private final LocalDate deathDate;
-    private List<Person> parents = new ArrayList<>();
+    private final List<Person> parents = new ArrayList<>();
 
     public Person(String name, LocalDate birthDate, LocalDate deathDate) {
         this.name = name;
@@ -41,29 +41,42 @@ public class Person {
                 '}';
     }
 
-    public static List<Person> fromCsv(String path) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(path));
+    public static List<Person> fromCsv(String path) {
         List<Person> people = new ArrayList<>();
-        Map<String, PersonWithParentsNames> peopleWithParentNames = new HashMap<>();
-        String line;
-        reader.readLine();
-        while ((line = reader.readLine()) != null) {
-//            Person person = Person.fromCsvLine(line);
-            var personWithParentNames = PersonWithParentsNames.fromCsvLine(line);
-            var person = personWithParentNames.getPerson();
-            try {
-                person.validateLifespan();
-                person.validateAmbiguity(people);
-                people.add(Person.fromCsvLine(line));
+        Map<String, PersonWithParentsNames> mapPersonWithParentNames = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                PersonWithParentsNames personWithNames = PersonWithParentsNames.fromCsvLine(line);
+                personWithNames.getPerson().validateLifespan();
+                personWithNames.getPerson().validateAmbiguity(people);
+
+                Person person = personWithNames.getPerson();
                 people.add(person);
-                peopleWithParentNames.put(person.name, personWithParentNames);
-            } catch (NegativeLifespanException | AmbiguousPersonException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
+                mapPersonWithParentNames.put(person.name, personWithNames);
             }
+            PersonWithParentsNames.linkRelatives(mapPersonWithParentNames);
+            try {
+                for(Person person : people) {
+                    person.validateParentingAge();
+                }
+            }
+            catch (ParentingAgeException e) {
+                Scanner scanner = new Scanner(System.in);
+                System.out.println(e.getMessage());
+                System.out.println("Please confitm [Y/N]:");
+                String response = scanner.nextLine();
+                if (!response.equals("Y") && !response.equals("y"))
+                    people.remove(e.person);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NegativeLifespanException | AmbiguousPersonException e) {
+            System.err.println(e.getMessage());
         }
-        PersonWithParentsNames.linkRelatives(peopleWithParentNames);
-        reader.close();
+
         return people;
     }
 
@@ -85,10 +98,15 @@ public class Person {
     }
 
     private void validateAmbiguity(List<Person> people) throws AmbiguousPersonException {
-        for (Person person : people) {
+        for (Person person : people)
             if (person.getName().equals(getName()))
                 throw new AmbiguousPersonException(person);
-        }
+    }
+
+    private void validateParentingAge() throws ParentingAgeException {
+        for (Person parent : parents)
+            if (birthDate.isBefore(parent.birthDate.plusYears(15)) || (parent.deathDate != null && birthDate.isAfter(parent.deathDate)))
+                throw new ParentingAgeException(this, parent);
     }
 
     public void addParent(Person parent) {
