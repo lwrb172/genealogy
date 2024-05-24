@@ -174,6 +174,7 @@ public class Person {
                 .sorted(Comparator.comparing(Person::getBirthDate))
                 .collect(Collectors.toList());
     }
+
     public static List<Person> sortByLifespan(List<Person> people){
 
         Function<Person, Long> getLifespan = person
