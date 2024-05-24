@@ -10,6 +10,7 @@ public class Main {
         PlantUMLRunner.setPlantUMLPath("./plantuml-1.2024.3.jar");
 
 //        PlantUMLRunner.generateDiagram(Person.generateUML(people), "./", "outUML");
-        Person.sortByLifespan(people).forEach(System.out::println);
+//        Person.sortByLifespan(people).forEach(System.out::println);
+        System.out.println(Person.findOldestLiving(people));
     }
 }

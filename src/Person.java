@@ -185,4 +185,11 @@ public class Person {
                 .sorted((o2, o1) -> Long.compare(getLifespan.apply(o1), getLifespan.apply(o2)))
                 .toList();
     }
+
+    public static Person findOldestLiving(List<Person> people) {
+        return people.stream()
+                .filter(person -> person.deathDate == null)
+                .min(Comparator.comparing(Person::getBirthDate))
+                .orElse(null);
+    }
 }
