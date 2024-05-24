@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 public class PersonWithParentsNames {
-    private Person person;
-    private List<String> names;
+    private final Person person;
+    private final List<String> names;
 
     public PersonWithParentsNames(Person person, List<String> names) {
         this.person = person;

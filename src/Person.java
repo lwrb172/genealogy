@@ -1,9 +1,4 @@
-import org.w3c.dom.ls.LSInput;
-
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -66,7 +61,7 @@ public class Person {
             catch (ParentingAgeException e) {
                 Scanner scanner = new Scanner(System.in);
                 System.out.println(e.getMessage());
-                System.out.println("Please confitm [Y/N]:");
+                System.out.println("Please confirm [Y/N]:");
                 String response = scanner.nextLine();
                 if (!response.equals("Y") && !response.equals("y"))
                     people.remove(e.person);
@@ -111,5 +106,23 @@ public class Person {
 
     public void addParent(Person parent) {
         parents.add(parent);
+    }
+
+    public static void toBinaryFile(List<Person> people, String filename) throws IOException {
+        try (
+                FileOutputStream fos = new FileOutputStream(filename);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+        ) {
+            oos.writeObject(people);
+        }
+    }
+
+    public static List<Person> fromBinaryFile(String filename) throws IOException, ClassNotFoundException {
+        try (
+                FileInputStream fis = new FileInputStream(filename);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+        ) {
+            return (List<Person>) ois.readObject();
+        }
     }
 }
