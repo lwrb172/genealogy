@@ -163,4 +163,10 @@ public class Person {
         return sb.toString();
     }
 
+    public static List<Person> filterByName(List<Person> people, String substring) {
+        return people.stream()
+                .filter(person -> person.getName().contains(substring))
+                .collect(Collectors.toList());
+    }
+
 }
