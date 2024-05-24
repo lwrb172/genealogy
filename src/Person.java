@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Person {
     private final String name;
@@ -143,6 +144,23 @@ public class Person {
             sb.append(parentSections);
         }
         return sb.append("\n@enduml").toString();
+    }
+
+    public static String generateUML(List<Person> people)
+    {
+        StringBuilder sb = new StringBuilder();
+        Function<Person,String> deleteSpaces = p -> p.getName().replaceAll(" ","");
+        Function<Person,String>  addObject = p -> "object " + deleteSpaces.apply(p);
+        sb.append("@startuml");
+        sb.append(people.stream()
+                .map(p -> "\n" + addObject.apply(p))
+                .collect(Collectors.joining()));
+        sb.append(people.stream()
+                .flatMap(person -> person.parents.isEmpty() ? Stream.empty() :
+                        person.parents.stream()
+                                .map(p -> "\n" + deleteSpaces.apply(p) + " <-- " + deleteSpaces.apply(person))).collect(Collectors.joining()));
+        sb.append("\n@enduml");
+        return sb.toString();
     }
 
 }
