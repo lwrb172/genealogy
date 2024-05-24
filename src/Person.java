@@ -3,10 +3,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Person {
+public class Person implements Serializable {
     private final String name;
     private final LocalDate birthDate;
     private final LocalDate deathDate;
@@ -146,21 +147,29 @@ public class Person {
         return sb.append("\n@enduml").toString();
     }
 
-    public static String generateUML(List<Person> people)
-    {
-        StringBuilder sb = new StringBuilder();
-        Function<Person,String> deleteSpaces = p -> p.getName().replaceAll(" ","");
-        Function<Person,String>  addObject = p -> "object " + deleteSpaces.apply(p);
-        sb.append("@startuml");
-        sb.append(people.stream()
-                .map(p -> "\n" + addObject.apply(p))
-                .collect(Collectors.joining()));
-        sb.append(people.stream()
-                .flatMap(person -> person.parents.isEmpty() ? Stream.empty() :
-                        person.parents.stream()
-                                .map(p -> "\n" + deleteSpaces.apply(p) + " <-- " + deleteSpaces.apply(person))).collect(Collectors.joining()));
-        sb.append("\n@enduml");
-        return sb.toString();
+    public static String generateTree(List<Person> people, Function<String, String> postProcess, Predicate<Person> condition) {
+        Function<Person,String> clean = p -> p.getName().replaceAll(" ","");
+        Function<Person, String> addObject = person -> String.format("object %s\n", clean.apply(person));
+        Function<Person, String> post = addObject.andThen(postProcess);
+        String objects = people.stream()
+                .map(person -> condition.test(person) ? post.apply(person) : addObject.apply(person))
+                .collect(Collectors.joining());
+
+        String relationships = people.stream()
+                .flatMap(person ->
+                        person.getParents().isEmpty() ?  Stream.empty():
+                                person.getParents().stream()
+                                        .map(parent -> String.format("%s <-- %s\n",clean.apply(parent),
+                                                clean.apply(person)
+                                        ))
+                )
+                .collect(Collectors.joining());
+
+        return String.format("@startuml\n%s%s@enduml", objects, relationships);
+    }
+
+    public List<Person> getParents() {
+        return parents;
     }
 
     public static List<Person> filterByName(List<Person> people, String substring) {
