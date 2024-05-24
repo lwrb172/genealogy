@@ -2,6 +2,8 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Person {
     private final String name;
@@ -125,4 +127,22 @@ public class Person {
             return (List<Person>) ois.readObject();
         }
     }
+    public String generateTree(){
+        Function<Person,String> cleanPersonName = p -> p.getName().replaceAll(" ","");
+        Function<Person, String> addObject = person -> String.format("object %s", cleanPersonName.apply(person));
+
+        StringBuilder sb = new StringBuilder("@startuml\n");
+        String pname = cleanPersonName.apply(this);
+        sb.append(addObject.apply(this));
+
+        if (!parents.isEmpty()) {
+            String parentSections = parents.stream()
+                    .map(parent ->"\n"+addObject.apply(parent)+"\n"+
+                            cleanPersonName.apply(parent)+"<--"+pname )
+                    .collect(Collectors.joining());
+            sb.append(parentSections);
+        }
+        return sb.append("\n@enduml").toString();
+    }
+
 }

@@ -4,8 +4,8 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         List<Person> people = Person.fromCsv("family.csv");
-//        for (Person person : people)
-//            System.out.println(person);
+        for (Person person : people)
+            person.generateTree();
 
         PlantUMLRunner.setPlantUMLPath("./plantuml-1.2024.3.jar");
         PlantUMLRunner.generateDiagram("@startuml\n" +
